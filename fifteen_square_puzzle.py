@@ -1,10 +1,7 @@
 import random
 
-
-
-
 class GameState():
-    def __init__(self, state):
+    def __init__(self, state=None):
         if state:
             self.state = state
         else:
@@ -17,6 +14,7 @@ class GameState():
                     xrow.append(choice)
                     tile_numbers.remove(choice)
                 data.append(xrow)
+            self.state = data
 
 
     def __str__(self):
@@ -33,6 +31,18 @@ class GameState():
             for tile in row:
                 if tile == 0:
                     return (self.state.index(row), row.index(tile))
+    
+    def is_arranged(self):
+        goal = [
+            [1, 2, 3, 4],
+            [5, 6, 7, 8],
+            [9, 10, 11, 12],
+            [13, 14, 15, 0]    
+        ]
+        if self.state == goal:
+            return True
+        else:
+            return False
     
     def move_is_valid(self, move):
         x,y = move
@@ -62,7 +72,7 @@ class GameState():
             upper = self.state[upper_tile[0]][upper_tile[1]]        
         else:
             print('Invalid UP move ')
-            exit()
+            return False
         
         self.state[upper_tile[0]][upper_tile[1]] = zero
         self.state[zero_tile[0]][zero_tile[1]] = upper
@@ -80,7 +90,7 @@ class GameState():
             lower = self.state[lower_tile[0]][lower_tile[1]]
         else:
             print('Invalid DOWN move ')
-            exit()
+            return False
 
         self.state[lower_tile[0]][lower_tile[1]] = zero
         self.state[zero_tile[0]][zero_tile[1]] = lower
@@ -99,7 +109,7 @@ class GameState():
             right = self.state[right_tile[0]][right_tile[1]]
         else:
             print('Invalid RIGHT move ')
-            exit()
+            return False
 
         self.state[right_tile[0]][right_tile[1]] = zero
         self.state[zero_tile[0]][zero_tile[1]] = right
@@ -118,7 +128,7 @@ class GameState():
             left = self.state[left_tile[0]][left_tile[1]]
         else:
             print('Invalid LEFT move ')
-            exit()
+            return False
 
 
         self.state[left_tile[0]][left_tile[1]] = zero
@@ -127,3 +137,62 @@ class GameState():
         return (f'LEFT: Switched {zero_tile}({zero}), for {left_tile}({left})')
     
 
+
+# GAME PLAY
+def play():
+    print("                  Welcome              ")
+    print("                    to                 ")
+    print("           FIFTEEN SQUARE PUZZLE       ")
+
+    print("Controls: \n To move up, press: U \n To move down, press: D \n To move left, press: L \n To move right, press: R")
+
+    moves = []
+    game_states = []
+
+    start_state = GameState()
+    game_states.append(start_state)
+
+    while not start_state.is_arranged():
+        current_state = start_state
+        current_state.show()
+
+        move = input('Make your move...')
+        moves.append(move)
+        if make_move(move, current_state) == None:
+                continue
+        
+        current_state.show
+        game_states.append(current_state)
+        
+
+
+    def make_move(move, state):
+        if move.lower('u'):
+            if not state.up():
+                return None
+              
+        elif move.lower('d'):
+            if not state.down():
+                return None
+        elif move.lower('l'):
+            if not state.left():
+                return None
+        elif move.lower('r'):
+            if not state.right():
+                return None
+        else:
+            print("Invalid move")
+            return None
+
+
+    return None
+
+def train():
+    return None
+
+def play_with_AI():
+    return None
+
+
+
+play()
