@@ -202,25 +202,56 @@ class Puzzle():
                 shuffled = True
         return board
     
-
-    def play(self):
-        self.start_config = self.shuffled_board()
-        # self.states.append(start_config)
-
-        while not self.solved:
-            # Get the last state
-            current = self.get_last_state()
+    def get_last_state(self):
+            '''
+            Takes the head of a linkedlist(start_config) and returns the youngest node(recent game cycle)
+            '''
+            current = self.start_config
+            while current.next_node:
+                current = current.next_node
+                if current.next_node == None:
+                    return current
+            return current
             
-            # get_possible_valid_moves
-            # get_valid_input
-            # apply_move
-            # add result of a applying move and the valid_input to self.gamecycles {move: move, state: boardstate}
-            # if result of a applying move is arranged
-                # set self.solved to True
-            # Add make resultin boardstate a direct child of current
-            # display last state
+    def get_empty(self, boardstate):
+            '''
+            :params: boardstate -- list of lists with 4 x 4 config
+            :return: tuple
+            Takes a boardstate then returns a tuple(coordinate of the position of 0 in the board)
+            '''
+            for row in boardstate:
+                for item in row:
+                    if item == 0:
+                        return (boardstate.index(row), row.index(item)) 
+            return None
         
-            pass
+    def validate_move(self, move, zero_coord):
+        '''
+        :params: move -- string
+        :params: zero_coord -- a tuple. The coordinate of the empty tile
+        :return: boolean
+        Takes a move(a string) test if move is in a defined range of moves['U' | 'D' | 'L' | 'R]. 
+        If not raise exception(Invalid move). 
+        Check if the move and return either true or false 
+        '''
+        valid_moves = ['U', 'D', 'L', 'R']
+        if move.upper() not in valid_moves:
+            raise Exception("Invalid Move")
+
+        if move.upper() == "U":
+            result = (zero_coord[0]-1 , zero_coord[1])
+        if move.upper() == "D":
+            result = (zero_coord[0]+1 , zero_coord[1])
+        if move.upper() == "L":
+            result = (zero_coord[0] , zero_coord[1]-1)
+        if move.upper() == "R":
+            result = (zero_coord[0] , zero_coord[1]+1)
+        
+        for i in result:
+            if i < 0 or i > 3:
+                return False
+        
+        return True
 
     def get_possible_valid_moves(self, boardstate):
         '''
@@ -229,16 +260,36 @@ class Puzzle():
         Takes a board state and returns a list of possible valid moves
         ('U' | 'D' | 'L' | 'R) returns a list of all or some of these strings
         '''
-        pass
+        # make a list a list of moves
+        moves = ['U', 'D', 'L', 'R']
+        # try to get the position on the empty space 
+        try:
+            empty_tile_coord = self.get_empty(boardstate)
+        except Exception as e:
+            print(e)
+            exit()
+        # validate the four moves
+        for move in moves:
+            # if any of the returns a number below 0 or above 3
+            if not self.validate_move(move, empty_tile_coord):
+                # remove that move from the valid moves list 
+                moves.remove(move)
+        # return the rest of the list(valid moves)
+        return moves
 
     def get_valid_input(self, valid_moves, input):
         '''
         :params: valid_moves -- list of strings
-        :params: input -- string
         :return: string
-        Takes a list of valid moves(list of strings) and checks if input is in the list
-        If input not in list, keep prompting for valid input else return input'''
-        pass
+        Takes a list of valid moves(list of strings) and propmt player for a move.
+        If move is not in the list of valid moves show a message and prompt again
+        '''
+        while True:
+            move = input("Make a move('U' | 'D' | 'L' | 'R')  ")
+            if move.upper() in valid_moves:
+                return move
+            print("Invalid move")
+            print()
 
     def apply_move(self, move, boardstate):
         '''
@@ -246,36 +297,74 @@ class Puzzle():
         :params: boardstate -- list of lists with 4 x 4 config
         :return: list of lists with 4 x 4 config
         Takes a move and apply to the boardstate then returns a new boardstate
+        Does this by getting the position of the empty tile and switching with the one above, below, by the right or left of it.        
         '''
-        pass
+        zero_tile = self.get_empty(boardstate)
+        zero = boardstate[zero_tile[0]][zero_tile[1]]
 
-    def get_empty(self, boardstate):
-        '''
-        :params: boardstate -- list of lists with 4 x 4 config
-        :return: tuple
-        Takes a boardstate then returns a tuple(coordinate of the position of 0 in the board)
-        '''
-        pass
+        # Validate move 
+        if not self.validate_move(move, zero_tile):
+            raise Exception("Invalid move")
+
+        # Get coordinates of the tile to be moved
+        if move.upper() == 'U':
+            to_be_moved_coord = (zero_tile[0]-1, zero_tile[1])
+        elif move.upper() == 'D':
+            to_be_moved_coord = (zero_tile[0]+1, zero_tile[1])
+        elif move.upper() == 'L':
+            to_be_moved_coord = (zero_tile[0], zero_tile[1]-1)
+        elif move.upper() == 'R':
+            to_be_moved_coord = (zero_tile[0], zero_tile[1]+1)
+        else:
+            raise Exception('Invalid Move: Move not defined')
+        to_be_moved = boardstate[to_be_moved_coord[0]][to_be_moved_coord[1]]
+
+        # Switch positions
+        boardstate[to_be_moved_coord[0]][to_be_moved_coord[1]] = zero
+        boardstate[zero_tile[0]][zero_tile[1]] = to_be_moved
+
+        return boardstate
+
     
+
+
+    def play(self):
+        self.start_config = self.shuffled_board()
+        # self.states.append(start_config)
+
+        while not self.solved:
+            # Get the last state
+            current = self.get_last_state()
+            # get_possible_valid_moves
+            valid_moves = self.get_possible_valid_moves(current)
+            # get_valid_input
+            move = self.get_valid_input(valid_moves)
+            # try to apply_move
+            try:
+                self.apply_move(move, current)
+            except Exception as e:
+                print(e)
+                exit()
+
+            #TODO    
+            # add result of a applying move and the valid_input to self.gamecycles {move: move, state: boardstate}
+            # if result of a applying move is arranged
+                # set self.solved to True
+            # Add make resultin boardstate a direct child of current
+            # display last state
+        
+            pass
+
+
+
+
     
     # Game transition will be a (action, config) pair
         ## ('u', [[...],[...],[...],[...]])
 
     # u1-u2-u3-null4
     # 1
-    def get_last_state(self):
-        '''
-        Takes the head of a linkedlist(start_config) and returns the youngest node(recent game cycle)
-        '''
-        current = self.start_config
-        while current.next_node:
-            current = current.next_node
-            if current.next_node == None:
-                return current
-        return current
-        
-
-
+    
 
 
 
